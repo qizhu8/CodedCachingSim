@@ -24,9 +24,9 @@ class CCPacket(Packet):
         if id:
             self._header['id'] = id
         if source:
-            self._header['source'] = Source
+            self._header['source'] = source
         if destination:
-            self._header['destination'] = Destination
+            self._header['destination'] = destination
         if content:
             self._payload['content'] = content
 

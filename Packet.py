@@ -16,19 +16,15 @@ class Packet(object):
 
     def __init__(self, inStr=""):
         super(Packet, self).__init__()
-        self._header = {}
-        self._payload = {}
 
-        """
-        dictionarize the fed in json string
-        """
         if inStr:
-            dict = json.loads(inStr)
-            if 'header' in dict:
-                self._header = dict['header']
-            if 'payload' in dict:
-                self._payload = dict['payload']
-
+            self.fromString(inStr)
+        else:
+            self._header = {}
+            self._payload = {}
+    """
+    simple variable set/get
+    """
     def getHeader(self):
         return self._header
 
@@ -42,6 +38,9 @@ class Packet(object):
         self._payload = payload.copy()
 
 
+    """
+    nice printout
+    """
     def __dictPrint__(self, d, level=1):
         printout = ""
         for key in d:
@@ -67,8 +66,19 @@ class Packet(object):
 
         return printout
 
+    """
+    serilization
+    """
     def toString(self):
         return json.dumps({'header': self._header, 'payload': self._payload})
+
+    def fromString(self, inStr):
+        if inStr:
+            dict = json.loads(inStr)
+            if 'header' in dict:
+                self._header = dict['header']
+            if 'payload' in dict:
+                self._payload = dict['payload']
 
 
 if __name__ == '__main__':
