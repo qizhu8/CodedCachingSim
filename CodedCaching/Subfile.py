@@ -6,16 +6,18 @@ import json
 class Subfile(object):
     """docstring for Subfile."""
 
-    def __init__(self, fileId=None, subfileId=None, inStr=''):
+    def __init__(self, fileId=None, subfileId=None, subfileSize=0, inStr=''):
         super(Subfile, self).__init__()
+        self._fileId = None
+        self._subfileId = None
+        self._subfileSize = 0
 
         if inStr:
             self.fromString(inStr)
-
-        if fileId:
+        else:
             self._fileId = fileId
-        if subfileId:
             self._subfileId = subfileId
+            self._subfileSize = subfileSize
 
     """
     variables set/get functions
@@ -32,6 +34,12 @@ class Subfile(object):
     def getSubfileId(self):
         return self._subfileId
 
+    def setSubfileSize(self, subfileSize):
+        self._subfileSize = subfileSize
+
+    def getSubfileSize(self):
+        return self._subfileSize
+
     """
     nice printout
     """
@@ -42,15 +50,16 @@ class Subfile(object):
     serilization
     """
     def toString(self):
-        return json.dumps({'fileId': self._fileId, 'subfileId': self._subfileId})
+        return json.dumps({'fileId': self._fileId, 'subfileId': self._subfileId, 'subfileSize': self._subfileSize})
 
     def fromString(self, inStr):
         d = json.loads(inStr)
         self._fileId = d['fileId']
         self._subfileId = d['subfileId']
+        self._subfileSize = d['subfileSize']
 
 if __name__ == '__main__':
-    subfile = Subfile(fileId=1, subfileId=3)
+    subfile = Subfile(fileId=1, subfileId=3, subfileSize=1)
     print(subfile)
 
     subfileStr = subfile.toString()

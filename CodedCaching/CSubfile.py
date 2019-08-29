@@ -102,10 +102,10 @@ class CSubfile(object):
 
 if __name__ == '__main__':
     id = 20
-    subfile11 = Subfile(fileId=1, subfileId=1)
-    subfile21 = Subfile(fileId=2, subfileId=1)
-    subfile31 = Subfile(fileId=3, subfileId=1)
-    subfile42 = Subfile(fileId=4, subfileId=2)
+    subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1)
+    subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1)
+    subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
+    subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
     subfileSet = {subfile11, subfile21, subfile31, subfile42}
     codedSubfile = CSubfile(id=id, subfileSet=subfileSet)
 

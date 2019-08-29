@@ -39,6 +39,9 @@ class BitSequence(object):
         if not self.hasCodedSubfile(codedSubfileId):
             self._codedSubfileDict[codedSubfileId] = codedSubfile
             self._codedSubfileCounter += 1
+        else: # replace
+            self._codedSubfileDict[codedSubfileId] = codedSubfile
+
 
     def delCodedSubfile(self, codedSubfileId):
         if self.hasCodedSubfile(codedSubfileId):
@@ -68,18 +71,18 @@ class BitSequence(object):
             self._codedSubfileDict[id] = CSubfile(inStr=d[id])
 
 if __name__=='__main__':
-    subfile11 = Subfile(fileId=1, subfileId=1)
-    subfile12 = Subfile(fileId=1, subfileId=2)
-    subfile13 = Subfile(fileId=1, subfileId=3)
-    subfile21 = Subfile(fileId=2, subfileId=1)
-    subfile22 = Subfile(fileId=2, subfileId=2)
-    subfile23 = Subfile(fileId=2, subfileId=3)
-    subfile31 = Subfile(fileId=3, subfileId=1)
-    subfile32 = Subfile(fileId=3, subfileId=2)
-    subfile33 = Subfile(fileId=3, subfileId=3)
-    subfile41 = Subfile(fileId=4, subfileId=1)
-    subfile42 = Subfile(fileId=4, subfileId=2)
-    subfile43 = Subfile(fileId=4, subfileId=3)
+    subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1)
+    subfile12 = Subfile(fileId=1, subfileId=2, subfileSize=1)
+    subfile13 = Subfile(fileId=1, subfileId=3, subfileSize=1)
+    subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1)
+    subfile22 = Subfile(fileId=2, subfileId=2, subfileSize=1)
+    subfile23 = Subfile(fileId=2, subfileId=3, subfileSize=1)
+    subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
+    subfile32 = Subfile(fileId=3, subfileId=2, subfileSize=1)
+    subfile33 = Subfile(fileId=3, subfileId=3, subfileSize=1)
+    subfile41 = Subfile(fileId=4, subfileId=1, subfileSize=1)
+    subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
+    subfile43 = Subfile(fileId=4, subfileId=3, subfileSize=1)
 
     subfileSet1 = {subfile11, subfile21, subfile31, subfile41}
     subfileSet2 = {subfile12, subfile22, subfile32, subfile42}
