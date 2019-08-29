@@ -105,3 +105,6 @@ class Cache(object):
         ZDict = d['Z']
         for id in ZDict:
             self.addCacheSubfile(CSubfile(inStr=ZDict[id]))
+
+
+if __name__=='__main__':
