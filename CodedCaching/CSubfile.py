@@ -10,6 +10,7 @@ class CSubfile(object):
         # super(Subfile, self).__init__()
         self._id = None
         self._subfileSet = {} # a 2-level dictionary. First level for fileId, second level for subfileId, value is subfile instance
+        self._subfileSize = 0
         self._subfileCounter = 0
 
         if inStr:
@@ -38,11 +39,23 @@ class CSubfile(object):
     def getSubfileCounter(self):
         return self._subfileCounter
 
+    def getSubfileSize(self):
+        return self._subfileSize
+
     """
     add/remove/check subfile
     """
     def addSubfile(self, subfile):
         fileId, subfileId = subfile.getFileId(), subfile.getSubfileId()
+        subfileSize = subfile.getSubfileSize()
+
+        if self._subfileCounter == 0: # empty file
+            self._subfileSize = subfileSize
+        elif self._subfileSize != subfileSize:
+            print("New subfile has a size which is not compatable to the current subfiles")
+            return
+
+
         if fileId in self._subfileSet: # this file show up before
             if subfileId in self._subfileSet[fileId]: # this subfile show up before. do nothing
                 return
@@ -59,6 +72,10 @@ class CSubfile(object):
                 self._subfileSet.pop(fileId)
             self._subfileCounter -= 1
 
+        if self._subfileCounter <= 0:
+            self._subfileCounter = 0
+            self._subfileSize = 0
+
     def hasSubfile(self, fileId, subfileId):
         if fileId in self._subfileSet:
             if subfileId in self._subfileSet[fileId]: # exists subfile
@@ -69,8 +86,7 @@ class CSubfile(object):
     nice printout
     """
     def __str__(self):
-        printout = str(self._id)
-        printout += ': '
+        printout = "id:{id} size={size}: ".format(id=self._id, size=self._subfileSize)
 
         subfileStrList = []
         for fileId in self._subfileSet:
