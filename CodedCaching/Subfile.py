@@ -6,57 +6,68 @@ import json
 class Subfile(object):
     """docstring for Subfile."""
 
-    def __init__(self, fileId=None, subfileId=None, subfileSize=0, inStr=''):
+    def __init__(self, fileId=None, subfileId=None, subfileSize=0, content="", inStr=''):
         super(Subfile, self).__init__()
-        self._fileId = None
-        self._subfileId = None
+        self._id = [None, None]
         self._subfileSize = 0
+        self._content = ""
 
         if inStr:
             self.fromString(inStr)
         else:
-            self._fileId = fileId
-            self._subfileId = subfileId
-            self._subfileSize = subfileSize
+            self.setId(fileId, subfileId)
+            self.setSubfileSize(subfileSize)
+            self.setContent(content)
 
     """
     variables set/get functions
     """
-    def setFileId(self, fileId):
-        self._fileId = fileId
+    def setId(self, fileId, subfileId):
+        self._id = [fileId, subfileId]
+
+    def getId(self):
+        return self._id
 
     def getFileId(self):
-        return self._fileId
-
-    def setSubfileId(self, subfileId):
-        self._subfileId = subfileId
+        return self._id[0]
 
     def getSubfileId(self):
-        return self._subfileId
+        return self._id[1]
 
     def setSubfileSize(self, subfileSize):
-        self._subfileSize = subfileSize
+        self._subfileSize = max(0, subfileSize)
 
     def getSubfileSize(self):
         return self._subfileSize
+
+    def setContent(self, content):
+        self._content = content
+
+    def getContent(self):
+        return self._content
 
     """
     nice printout
     """
     def __str__(self):
-        return '-'.join([str(self._fileId), str(self._subfileId)])
+        return '-'.join([str(self._id[0]), str(self._id[1])])
 
     """
     serilization
     """
     def toString(self):
-        return json.dumps({'fileId': self._fileId, 'subfileId': self._subfileId, 'subfileSize': self._subfileSize})
+        d = {
+            'id': self._id,
+            'subfileSize': self._subfileSize,
+            'content': self._content
+            }
+        return json.dumps(d)
 
     def fromString(self, inStr):
         d = json.loads(inStr)
-        self._fileId = d['fileId']
-        self._subfileId = d['subfileId']
-        self._subfileSize = d['subfileSize']
+        self.setId(d['id'][0], d['id'][1])
+        self.setSubfileSize(d['subfileSize'])
+        self.setContent(d['content'])
 
 if __name__ == '__main__':
     subfile = Subfile(fileId=1, subfileId=3, subfileSize=1)

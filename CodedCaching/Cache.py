@@ -34,10 +34,11 @@ class Cache(object):
     def setM(self, M):
         if M >= self._usedSpace: # still not touching user cache
             self._M = max(0, M)
+            return True
         else:
             print("There are {used} > {targetM} unified bits in cache. ".format(used=self._usedSpace, targetM=self._M))
             print("You can remove some of the files in cache.")
-
+            return False
 
     def getM(self):
         return self._M
@@ -93,6 +94,45 @@ class Cache(object):
         if self._usedSpace < 0:
             self._usedSpace = 0
 
+    def clear(self):
+        self._Z = {}
+        self._usedSpace = 0
+
+
+    """
+    Cache Behaviors
+    """
+
+    def decode(self, instance, soft=True):
+        """
+        decode BitSequence or CodedSubfile
+
+            instance: supportive instance
+            soft:
+                - True: only decode the header without returning the actual bits
+                - False: return the decode bits
+        """
+        decodeFuncDict = {
+            'BitSequence':self._decodeBitSequence,
+            'CSubfile': self._decodeCSubfile
+            }
+        instanceClass = instance.__class__.__name__
+        if instanceClass in decodeFuncDict:
+            decodeFunc = decodeFuncDict[instanceClass]
+            return decodeFunc(instance, soft=soft)
+        else:
+            print('Input instance is of class %d, which doesn''t have supportive decode function yet.' % instasnceClass )
+            return False, []
+
+    def _decodeBitSequence(self, bitSequence, soft=True):
+
+        return False, []
+
+    def _decodeCSubfile(self, csubfile, soft=True):
+
+        return False, []
+
+
     """
     nice printout
     """
@@ -119,6 +159,23 @@ class Cache(object):
         for id in ZDict:
             self.addCacheSubfile(CSubfile(inStr=ZDict[id]))
 
+    """
+    example
+    """
+    def exampleSelfSetup(self):
+        subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=2)
+        subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1)
+        subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
+        subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
+
+        subfileSet1 = {subfile11}
+        subfileSet2 = {subfile21, subfile31, subfile42}
+        uncodedsubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
+        codedSubfile2 = CSubfile(id=20, subfileSet=subfileSet2)
+
+        self.setM(3)
+        self.addCacheSubfile(uncodedsubfile1)
+        self.addCacheSubfile(codedSubfile2)
 
 if __name__=='__main__':
     subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=2)

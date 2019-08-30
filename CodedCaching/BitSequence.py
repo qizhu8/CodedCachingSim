@@ -70,6 +70,35 @@ class BitSequence(object):
         for id in d:
             self._codedSubfileDict[id] = CSubfile(inStr=d[id])
 
+    """
+    example self setup
+    """
+    def exampleSelfSetup(self):
+        subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1)
+        subfile12 = Subfile(fileId=1, subfileId=2, subfileSize=1)
+        subfile13 = Subfile(fileId=1, subfileId=3, subfileSize=1)
+        subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1)
+        subfile22 = Subfile(fileId=2, subfileId=2, subfileSize=1)
+        subfile23 = Subfile(fileId=2, subfileId=3, subfileSize=1)
+        subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
+        subfile32 = Subfile(fileId=3, subfileId=2, subfileSize=1)
+        subfile33 = Subfile(fileId=3, subfileId=3, subfileSize=1)
+        subfile41 = Subfile(fileId=4, subfileId=1, subfileSize=1)
+        subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
+        subfile43 = Subfile(fileId=4, subfileId=3, subfileSize=1)
+
+        subfileSet1 = {subfile11, subfile21, subfile31, subfile41}
+        subfileSet2 = {subfile12, subfile22, subfile32, subfile42}
+        subfileSet3 = {subfile13, subfile23, subfile33, subfile43}
+
+        codedSubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
+        codedSubfile2 = CSubfile(id=2, subfileSet=subfileSet2)
+        codedSubfile3 = CSubfile(id=3, subfileSet=subfileSet3)
+
+        self.addCodedSubfile(codedSubfile1)
+        self.addCodedSubfile(codedSubfile2)
+        self.addCodedSubfile(codedSubfile3)
+
 if __name__=='__main__':
     subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1)
     subfile12 = Subfile(fileId=1, subfileId=2, subfileSize=1)
