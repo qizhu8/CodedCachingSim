@@ -32,7 +32,12 @@ class Cache(object):
     Simple variable set/get
     """
     def setM(self, M):
-        self._M = M
+        if M >= self._usedSpace: # still not touching user cache
+            self._M = max(0, M)
+        else:
+            print("There are {used} > {targetM} unified bits in cache. ".format(used=self._usedSpace, targetM=self._M))
+            print("You can remove some of the files in cache.")
+
 
     def getM(self):
         return self._M
