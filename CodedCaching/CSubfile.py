@@ -12,6 +12,8 @@ class CSubfile(object):
         self._subfileSet = {} # a 2-level dictionary. First level for fileId, second level for subfileId, value is subfile instance
         self._subfileSize = 0
         self._subfileCounter = 0
+        self._subfileBrief = []
+        self._subfileBriefUpToDate = True # True: matches _codedSubfileDict
 
         if inStr:
             self.fromString(inStr)
@@ -23,6 +25,11 @@ class CSubfile(object):
     """
     simple variable set/get
     """
+    def clearSubfile(self):
+        self._subfileBriefUpToDate = True
+        self._subfileSet = {}
+        self._subfileCounter = 0
+
     def setId(self, id):
         self._id = id
 
@@ -30,6 +37,7 @@ class CSubfile(object):
         return self._id
 
     def setSubfileSet(self, subfileSet):
+        self.clearSubfile()
         for subfile in subfileSet:
             self.addSubfile(subfile)
 
@@ -42,6 +50,11 @@ class CSubfile(object):
     def getSubfileSize(self):
         return self._subfileSize
 
+    def getSubfileBrief(self):
+        if not self._subfileBriefUpToDate:
+            self._updateSubfileBrief()
+        return self._subfileBrief
+
     """
     add/remove/check subfile
     """
@@ -51,10 +64,11 @@ class CSubfile(object):
 
         if self._subfileCounter == 0: # empty file
             self._subfileSize = subfileSize
+            if self._subfileBriefUpToDate:
+                self._subfileBrief.append([fileId, subfileId])
         elif self._subfileSize != subfileSize:
             print("New subfile has a size which is not compatable to the current subfiles")
             return
-
 
         if fileId in self._subfileSet: # this file show up before
             if subfileId in self._subfileSet[fileId]: # this subfile show up before. do nothing
@@ -65,8 +79,10 @@ class CSubfile(object):
             self._subfileSet[fileId] = {subfileId: subfile}
         self._subfileCounter += 1
 
+
     def delSubfile(self, fileId, subfileId):
         if self.hasSubfile(fileId, subfileId): # exists subfile, pop the subfile
+            self._subfileBriefUpToDate = False
             self._subfileSet[fileId].pop(subfileId)
             if not self._subfileSet[fileId]: # an empty dict, then pop this file
                 self._subfileSet.pop(fileId)
@@ -81,6 +97,14 @@ class CSubfile(object):
             if subfileId in self._subfileSet[fileId]: # exists subfile
                 return True
         return False
+
+    def _updateSubfileBrief(self):
+        if not self._subfileBriefUpToDate:
+            self._subfileBrief = []
+            for fileId in self._subfileSet:
+                for subfileId in self._subfileSet[fileId]:
+                    self._subfileBrief.append([fileId, subfileId])
+        self._subfileBriefUpToDate = True
 
     """
     nice printout
@@ -111,7 +135,7 @@ class CSubfile(object):
     def fromString(self, inStr):
         d = json.loads(inStr)
         self._id = d['id']
-        self._subfileSet = {}
+        self.clearSubfile()
         for subfileStr in d['subfile']:
             self.addSubfile(Subfile(inStr=subfileStr))
 
@@ -132,5 +156,11 @@ if __name__ == '__main__':
 
     codedSubfileFromStr = CSubfile(inStr=codedSubfileStr)
     codedSubfileFromStr.delSubfile(1, 1)
-    print(codedSubfileFromStr)
+    print(codedSubfileFromStr.toString())
     print(codedSubfileFromStr.getSubfileCounter())
+
+    print(codedSubfileFromStr.getSubfileBrief())
+
+    # print("-"*20)
+    # codedSubfileCopy = codedSubfile.copy()
+    # print(codedSubfileCopy)

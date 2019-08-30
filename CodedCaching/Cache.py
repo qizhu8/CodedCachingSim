@@ -129,7 +129,7 @@ class Cache(object):
         return False, []
 
     def _decodeCSubfile(self, csubfile, soft=True):
-
+        csubfile_copy = csubfile.copy()
         return False, []
 
 
@@ -168,12 +168,16 @@ class Cache(object):
         subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
         subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
 
-        subfileSet1 = {subfile11}
-        subfileSet2 = {subfile21, subfile31, subfile42}
-        uncodedsubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
+
+        uncodedsubfile11 = CSubfile(id=11, subfileSet={subfile11})
+        uncodedsubfile21 = CSubfile(id=21, subfileSet={subfile21})
+        uncodedsubfile31 = CSubfile(id=31, subfileSet={subfile31})
+        uncodedsubfile42 = CSubfile(id=42, subfileSet={subfile42})
+
+        subfileSet1 = {subfile21, subfile31, subfile42}
         codedSubfile2 = CSubfile(id=20, subfileSet=subfileSet2)
 
-        self.setM(3)
+        self.setM(10)
         self.addCacheSubfile(uncodedsubfile1)
         self.addCacheSubfile(codedSubfile2)
 
@@ -183,13 +187,21 @@ if __name__=='__main__':
     subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
     subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
 
-    subfileSet1 = {subfile11}
-    subfileSet2 = {subfile21, subfile31, subfile42}
-    uncodedsubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
-    codedSubfile2 = CSubfile(id=20, subfileSet=subfileSet2)
 
-    cache = Cache(M=3, cacheContent=[uncodedsubfile1])
-    cache.addCacheSubfile(codedSubfile2)
+    uncodedsubfile11 = CSubfile(id=11, subfileSet={subfile11})
+    uncodedsubfile21 = CSubfile(id=21, subfileSet={subfile21})
+    uncodedsubfile31 = CSubfile(id=31, subfileSet={subfile31})
+    uncodedsubfile42 = CSubfile(id=42, subfileSet={subfile42})
+
+    subfileSet1 = {subfile21, subfile31, subfile42}
+    codedSubfile1 = CSubfile(id=20, subfileSet=subfileSet1)
+
+    cache = Cache(M=7)
+    cache.addCacheSubfile(uncodedsubfile11)
+    cache.addCacheSubfile(uncodedsubfile21)
+    cache.addCacheSubfile(uncodedsubfile31)
+    cache.addCacheSubfile(uncodedsubfile42)
+    cache.addCacheSubfile(codedSubfile1)
 
     print(cache)
 

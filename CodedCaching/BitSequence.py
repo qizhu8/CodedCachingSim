@@ -19,11 +19,19 @@ class BitSequence(object):
         self._codedSubfileDict = {}
         self._codedSubfileCounter = 0
 
+
         if inStr:
             self.fromString(inStr)
         else:
             self.setCodedSubfileDict(codedSubfileDict)
 
+
+
+
+
+    """
+    add/del/check codedSubfile
+    """
     def setCodedSubfileDict(self, codedSubfileDict):
         for id in codedSubfileDict:
             self.addCodedSubfile(codedSubfileDict[id])
@@ -69,6 +77,7 @@ class BitSequence(object):
         self._codedSubfileDict = {}
         for id in d:
             self._codedSubfileDict[id] = CSubfile(inStr=d[id])
+
 
     """
     example self setup
