@@ -2,15 +2,16 @@
 #!/usr/bin/env python3
 
 import json
+import base64
 
 class Subfile(object):
     """docstring for Subfile."""
 
-    def __init__(self, fileId=None, subfileId=None, subfileSize=0, content="", inStr=''):
+    def __init__(self, fileId=None, subfileId=None, subfileSize=0, content=b'', inStr=''):
         super(Subfile, self).__init__()
         self._id = [None, None]
         self._subfileSize = 0
-        self._content = ""
+        self._content = b''
 
         if inStr:
             self.fromString(inStr)
@@ -59,7 +60,7 @@ class Subfile(object):
         d = {
             'id': self._id,
             'subfileSize': self._subfileSize,
-            'content': self._content
+            'content': base64.b64encode(self._content)
             }
         return json.dumps(d)
 
@@ -67,10 +68,22 @@ class Subfile(object):
         d = json.loads(inStr)
         self.setId(d['id'][0], d['id'][1])
         self.setSubfileSize(d['subfileSize'])
-        self.setContent(d['content'])
+        self.setContent(base64.b64decode(d['content']))
+
+    """
+    bytes array operator
+    """
+    def XOR(a, b):
+        # if not isinstance(a, bytes) or isinstance(b, bytes):
+        if a.__class__.__name__ not in ['bytes', 'bytearray'] or b.__class__.__name__ not in ['bytes', 'bytearray']:
+            raise Exception('Input arrays are not bytes, they are %s and %s' %(a.__class__.__name__, b.__class__.__name__))
+        if len(a) != len(b):
+            raise Exception('Input arrays are of different length, %d and %d' %(len(a), len(b)))
+        return bytes([a[i] ^ b[i] for i in range(len(a))])
 
 if __name__ == '__main__':
     subfile = Subfile(fileId=1, subfileId=3, subfileSize=1)
+    subfile.setContent(b'\x13\x13')
     print(subfile)
 
     subfileStr = subfile.toString()
@@ -78,3 +91,4 @@ if __name__ == '__main__':
 
     subfileFromStr = Subfile(inStr=subfileStr)
     print(subfileFromStr)
+    print(subfileFromStr.toString())
