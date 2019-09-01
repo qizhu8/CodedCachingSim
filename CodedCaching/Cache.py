@@ -2,6 +2,8 @@
 #!/usr/bin/env python3
 
 import json
+import base64
+
 from Subfile import Subfile
 from CSubfile import CSubfile
 
@@ -58,7 +60,7 @@ class Cache(object):
     """
     add/del/check cache subfile
     """
-    def hasCacheSubfile(self, csubfile):
+    def hasCacheSubfile(self, csubfile=None, fileId=-1, subfileId=-1):
         if isinstance(csubfile, CSubfile):
             csubfileId = csubfile.getId()
         elif isinstance(csubfile, int):
@@ -129,7 +131,13 @@ class Cache(object):
         return False, []
 
     def _decodeCSubfile(self, csubfile, soft=True):
-        csubfile_copy = csubfile.copy()
+
+        # method one: check whether there is only one subfile in the subfileBrief
+        subfileBrief = csubfile.getSubfileBrief()
+        uncachedSubfileCounter = csubfile.getSubfileCounter()
+        for fileId, subfileId in subfileBrief:
+
+
         return False, []
 
 

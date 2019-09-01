@@ -133,6 +133,13 @@ class CSubfile(object):
 
         return printout
 
+    def printSubfileContent(self):
+        printout = """base64: {base64}\ninteger: {integer}""".format(
+                base64=base64.b64encode(self._subfileContent).decode(),
+                integer=int.from_bytes(self._subfileContent, byteorder='big')
+                )
+        print(printout)
+
     """
     serilization
     """
@@ -174,7 +181,7 @@ if __name__ == '__main__':
     subfileSet = {subfile11, subfile42}
     codedSubfile = CSubfile(id=id, subfileSet=subfileSet)
     print(codedSubfile)
-    print(''.join(format(x, '02x') for x in codedSubfile.getSubfileContent()))
+    codedSubfile.printSubfileContent()
 
     codedSubfileStr = codedSubfile.toString()
     print(codedSubfileStr)
@@ -182,9 +189,8 @@ if __name__ == '__main__':
     codedSubfileFromStr = CSubfile(inStr=codedSubfileStr)
     codedSubfileFromStr.delSubfile(subfile11)
     print(codedSubfileFromStr.toString())
-    print(''.join(format(x, '02x') for x in codedSubfileFromStr.getSubfileContent()))
-    # print(codedSubfileFromStr.getSubfileCounter())
-    #
+    codedSubfileFromStr.printSubfileContent()
+
     # print(codedSubfileFromStr.getSubfileBrief())
 
     # print("-"*20)
