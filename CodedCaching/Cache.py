@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import json
 import base64
+import numpy as np
 
 from Subfile import Subfile
 from CSubfile import CSubfile
@@ -20,9 +21,11 @@ class Cache(object):
         """
         super(Cache, self).__init__()
         self._M = 0
-        self._Z = {} # a dictionary storing the cache bit
+        self._cache = {} # a dictionary storing the csubfile
         self._usedSpace = 0
-
+        self._subfileIndexing = {} # used to store the index for each uncoded subfile
+        self._Z = {}      # a dictionary of matrixs storing coded subfile info for each subfile size
+        self._ZUpToDate = {}
         if inStr:
             self.fromString(inStr)
         else:
@@ -48,11 +51,12 @@ class Cache(object):
     def setCacheContent(self, cacheContent):
         if not isinstance(cacheContent, list):
             cacheContent = list(cacheContent)
+        self.clear()
         for csubfile in cacheContent:
             self.addCacheSubfile(csubfile)
 
     def getCacheContent(self):
-        return self._Z
+        return self._cache
 
     def getUsedSpace(self):
         return self._usedSpace
@@ -69,41 +73,91 @@ class Cache(object):
             print('unknown input ', csubfile)
             return False
 
-        if csubfileId in self._Z:
+        if csubfileId in self._cache:
             return True
         return False
 
     def addCacheSubfile(self, csubfile):
         csubfileId = csubfile.getId()
         csubfileSize = csubfile.getSubfileSize()
-        if not self.hasCacheSubfile(csubfile):
+        if not self.hasCacheSubfile(csubfile): # new csubfile
             if csubfileSize <= (self._M - self._usedSpace):
-                self._Z[csubfileId] = csubfile
+                self._cache[csubfileId] = csubfile
                 self._usedSpace += csubfileSize
+                self._ZUpToDate[csubfileSize] = False
             else:
                 # no space for this subfile
+                print('no space')
                 pass
         else: # replace the current subfile
-            csubfileInCacheSize = self._Z[csubfileId].getSubfileSize()
-            if (self._M - self._usedSpace) +  csubfileInCacheSize >= csubfileSize:
-                self._Z[csubfileId] = csubfile
+            csubfileInCacheSize = self._cache[csubfileId].getSubfileSize()
+            if (self._M - self._usedSpace) +  csubfileInCacheSize >= csubfileSize: # has space for the replacement
+                self._cache[csubfileId] = csubfile
                 self._usedSpace += csubfileSize - csubfileInCacheSize
+                self._ZUpToDate[csubfileSize] = False
 
     def delCacheSubfile(self, csubfileId):
         if self.hasCacheSubfile(csubfileId):
-            csubfile = self._Z.pop(csubfileId)
-            self._usedSpace -= csubfile.getSubfileSize()
+            csubfile = self._cache.pop(csubfileId)
+            csubfileSize = csubfile.getSubfileSize()
+            self._usedSpace -= csubfileSize
+            self._ZUpToDate[csubfileSize] = False
         if self._usedSpace < 0:
             self._usedSpace = 0
 
     def clear(self):
-        self._Z = {}
+        self._cache = {}
         self._usedSpace = 0
+        self._subfileIndexing = {}
+        self._Z = {}
+        self._ZUpToDate = {}
 
 
     """
     Cache Behaviors
     """
+
+    def _genZ(self, subfileSize):
+        """
+        Generate a matrix for each coded subfile in cache.
+        """
+
+        if subfileSize in self._ZUpToDate and self._ZUpToDate[subfileSize]:
+            return
+        # collect uncoded subfile id
+        tag2id = {}
+        id2tag = {}
+        curId = 0
+        tgtSubfileIdList = []
+        for csubfileId in self._cache:
+            csubfile = self._cache[csubfileId]
+            if csubfile.getSubfileSize() != subfileSize:
+                continue
+            tgtSubfileIdList.append(csubfileId)
+            for fileId, subfileId in csubfile.getSubfileBrief():
+                tag = str(fileId) + '-'+str(subfileId)
+                if tag not in tag2id:
+                    tag2id[tag] = curId
+                    id2tag[curId] = tag
+                    curId += 1
+
+        # curId now is the num of distinct uncodedsubfiles
+        print(tag2id)
+        print(id2tag)
+
+        self._Z[subfileSize] = np.zeros((len(tgtSubfileIdList), curId))
+        for row, csubfileId in enumerate(tgtSubfileIdList):
+            csubfile = self._cache[csubfileId]
+            for fileId, subfileId in csubfile.getSubfileBrief():
+                tag = str(fileId) + '-'+str(subfileId)
+                curId = tag2id[tag]
+                self._Z[subfileSize][row, curId] = 1
+
+        self._ZUpToDate[subfileSize] = True
+        print(self._Z[subfileSize])
+
+
+
 
     def decode(self, instance, soft=True):
         """
@@ -132,10 +186,8 @@ class Cache(object):
 
     def _decodeCSubfile(self, csubfile, soft=True):
 
-        # method one: check whether there is only one subfile in the subfileBrief
-        subfileBrief = csubfile.getSubfileBrief()
-        uncachedSubfileCounter = csubfile.getSubfileCounter()
-        for fileId, subfileId in subfileBrief:
+
+
 
 
         return False, []
@@ -147,8 +199,8 @@ class Cache(object):
     def __str__(self):
         printout = """"""
         printout += "used/total: {used}/{total}\n".format(used=self._usedSpace, total=self._M)
-        for csubfileId in self._Z:
-            printout += self._Z[csubfileId].__str__() + '\n'
+        for csubfileId in self._cache:
+            printout += self._cache[csubfileId].__str__() + '\n'
         return printout
 
 
@@ -156,7 +208,7 @@ class Cache(object):
     serilization
     """
     def toString(self):
-        ZDict = {id: self._Z[id].toString() for id in self._Z}
+        ZDict = {id: self._cache[id].toString() for id in self._cache}
         d = {'M': self._M, 'Z': ZDict}
         return json.dumps(d)
 
@@ -190,10 +242,13 @@ class Cache(object):
         self.addCacheSubfile(codedSubfile2)
 
 if __name__=='__main__':
-    subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=2)
-    subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1)
-    subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1)
-    subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1)
+
+    subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1, content=b'\x11')
+    subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1, content=b'\x21')
+    subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1, content=b'\x31')
+    subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1, content=b'\x42')
+    # subfileSet = {subfile11, subfile21, subfile31, subfile42}
+
 
 
     uncodedsubfile11 = CSubfile(id=11, subfileSet={subfile11})
@@ -202,9 +257,10 @@ if __name__=='__main__':
     uncodedsubfile42 = CSubfile(id=42, subfileSet={subfile42})
 
     subfileSet1 = {subfile21, subfile31, subfile42}
-    codedSubfile1 = CSubfile(id=20, subfileSet=subfileSet1)
 
-    cache = Cache(M=7)
+    codedSubfile1 = CSubfile(id=30, subfileSet=subfileSet1)
+
+    cache = Cache(M=20)
     cache.addCacheSubfile(uncodedsubfile11)
     cache.addCacheSubfile(uncodedsubfile21)
     cache.addCacheSubfile(uncodedsubfile31)
@@ -213,7 +269,9 @@ if __name__=='__main__':
 
     print(cache)
 
-    cacheStr = cache.toString()
-
-    cacheFromStr = Cache(inStr=cacheStr)
-    print(cacheFromStr)
+    cache._genZ(1)
+    #
+    # cacheStr = cache.toString()
+    #
+    # cacheFromStr = Cache(inStr=cacheStr)
+    # print(cacheFromStr)

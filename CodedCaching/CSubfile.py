@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import functionSet as fcs
 from Subfile import Subfile
 import json
 import base64
@@ -68,6 +69,8 @@ class CSubfile(object):
         fileId, subfileId = subfile.getFileId(), subfile.getSubfileId()
         subfileSize = subfile.getSubfileSize()
 
+        # print(self._subfileCounter)
+
         if self._subfileCounter == 0: # no file in current subfile
             self._subfileSize = subfileSize
             self._subfileContent = subfile.getContent()
@@ -87,10 +90,11 @@ class CSubfile(object):
             else:   # this file hasn't shown up before
                 self._subfileSet[fileId] = {subfileId}
 
-            self._subfileContent = Subfile.XOR(self._subfileContent, subfile.getContent())
+            self._subfileContent = fcs.XOR(self._subfileContent, subfile.getContent())
             self._subfileCounter += 1
             if self._subfileBriefUpToDate:
                 self._subfileBrief.append([fileId, subfileId])
+
 
 
 
@@ -98,7 +102,7 @@ class CSubfile(object):
         fileId, subfileId = subfile.getFileId(), subfile.getSubfileId()
         if self.hasSubfile(fileId, subfileId): # exists subfile, pop the subfile
             self._subfileBriefUpToDate = False
-            self._subfileContent = Subfile.XOR(self._subfileContent, subfile.getContent())
+            self._subfileContent = fcs.XOR(self._subfileContent, subfile.getContent())
             self._subfileSet[fileId].remove(subfileId)
             if not self._subfileSet[fileId]: # an empty dict, then pop this file
                 self._subfileSet.pop(fileId)
@@ -177,8 +181,8 @@ if __name__ == '__main__':
     subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1, content=b'\x21')
     subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1, content=b'\x31')
     subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1, content=b'\x42')
-    # subfileSet = {subfile11, subfile21, subfile31, subfile42}
-    subfileSet = {subfile11, subfile42}
+    subfileSet = {subfile11, subfile21, subfile31, subfile42}
+    # subfileSet = {subfile11, subfile42}
     codedSubfile = CSubfile(id=id, subfileSet=subfileSet)
     print(codedSubfile)
     codedSubfile.printSubfileContent()
@@ -190,6 +194,9 @@ if __name__ == '__main__':
     codedSubfileFromStr.delSubfile(subfile11)
     print(codedSubfileFromStr.toString())
     codedSubfileFromStr.printSubfileContent()
+
+    print(codedSubfileFromStr.getSubfileBrief())
+
 
     # print(codedSubfileFromStr.getSubfileBrief())
 

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import json
 import base64
@@ -69,17 +69,6 @@ class Subfile(object):
         self.setId(d['id'][0], d['id'][1])
         self.setSubfileSize(d['subfileSize'])
         self.setContent(base64.b64decode(d['content']))
-
-    """
-    bytes array operator
-    """
-    def XOR(a, b):
-        # if not isinstance(a, bytes) or isinstance(b, bytes):
-        if a.__class__.__name__ not in ['bytes', 'bytearray'] or b.__class__.__name__ not in ['bytes', 'bytearray']:
-            raise Exception('Input arrays are not bytes, they are %s and %s' %(a.__class__.__name__, b.__class__.__name__))
-        if len(a) != len(b):
-            raise Exception('Input arrays are of different length, %d and %d' %(len(a), len(b)))
-        return bytes([a[i] ^ b[i] for i in range(len(a))])
 
 if __name__ == '__main__':
     subfile = Subfile(fileId=1, subfileId=3, subfileSize=1)
