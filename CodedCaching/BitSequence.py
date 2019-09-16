@@ -100,9 +100,9 @@ class BitSequence(object):
         subfileSet2 = {subfile12, subfile22, subfile32, subfile42}
         subfileSet3 = {subfile13, subfile23, subfile33, subfile43}
 
-        codedSubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
-        codedSubfile2 = CSubfile(id=2, subfileSet=subfileSet2)
-        codedSubfile3 = CSubfile(id=3, subfileSet=subfileSet3)
+        codedSubfile1 = CSubfile(subfileSet=subfileSet1)
+        codedSubfile2 = CSubfile(subfileSet=subfileSet2)
+        codedSubfile3 = CSubfile(subfileSet=subfileSet3)
 
         self.addCodedSubfile(codedSubfile1)
         self.addCodedSubfile(codedSubfile2)
@@ -135,10 +135,12 @@ if __name__=='__main__':
     bitSequence.addCodedSubfile(codedSubfile2)
     bitSequence.addCodedSubfile(codedSubfile3)
 
+    print("-"*20)
     print(bitSequence)
 
     bitSequenceStr = bitSequence.toString()
 
     bitSequenceFromStr = BitSequence(inStr=bitSequenceStr)
 
+    print("-"*20)
     print(bitSequenceFromStr)
