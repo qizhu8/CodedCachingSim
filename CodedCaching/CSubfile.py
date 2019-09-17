@@ -4,24 +4,25 @@ import functionSet as fcs
 from Subfile import Subfile
 import json
 import base64
+import hashlib
 
 class CSubfile(object):
     """docstring for CSubfile (Coded Subfile)."""
 
-    def __init__(self, id=None, subfileSet=set(), inStr=""):
+    def __init__(self, subfileSet=set(), inStr=""):
         # super(Subfile, self).__init__()
-        self._id = None
+        self._id = None # id is computed by sha256(brief)
         self._subfileSet = {} # a 2-level dictionary. First level for fileId, second level for subfileId, value is subfile instance
         self._subfileSize = 0
         self._subfileCounter = 0
         self._subfileBrief = []
-        self._subfileBriefUpToDate = True # True: matches _codedSubfileDict
+        self._subfileBriefUpToDate = False # True: matches _codedSubfileDict
+        self._idUpToDate = False
         self._subfileContent = b''
 
         if inStr:
             self.fromString(inStr)
         else:
-            self.setId(id)
             self.setSubfileSet(subfileSet)
 
 
@@ -29,21 +30,28 @@ class CSubfile(object):
     simple variable set/get
     """
     def clearSubfile(self):
-        self._subfileBriefUpToDate = True
+        self._subfileBriefUpToDate = False
+        self._idUpToDate = False
         self._subfileSet = {}
         self._subfileCounter = 0
         self._subfileContent = b''
 
-    def setId(self, id):
-        self._id = id
+    # def setId(self, id):
+    #     self._id = id
 
     def getId(self):
+        if not self._idUpToDate:
+            self._updateId()
         return self._id
 
     def setSubfileSet(self, subfileSet):
         self.clearSubfile()
         for subfile in subfileSet:
             self.addSubfile(subfile)
+        self._updateSubfileBrief()
+        self._updateId()
+        self._subfileBriefUpToDate = True
+        self._idUpToDate = True
 
     def getSubfileSet(self):
         return self._subfileSet
@@ -70,11 +78,13 @@ class CSubfile(object):
         subfileSize = subfile.getSubfileSize()
 
         # print(self._subfileCounter)
-
         if self._subfileCounter == 0: # no file in current subfile
+            self._idUpToDate = False
+
             self._subfileSize = subfileSize
             self._subfileContent = subfile.getContent()
             self._subfileBrief = [[fileId, subfileId]]
+            self._subfileSet[fileId] = {subfileId}
             self._subfileCounter = 1
 
         else:
@@ -86,8 +96,12 @@ class CSubfile(object):
                 if subfileId in self._subfileSet[fileId]: # this subfile show up before. do nothing
                     return
                 else: # same file id but different subfile id
+                    self._idUpToDate = False
+
                     self._subfileSet[fileId].add(subfileId)
             else:   # this file hasn't shown up before
+                self._idUpToDate = False
+
                 self._subfileSet[fileId] = {subfileId}
 
             self._subfileContent = fcs.XOR(self._subfileContent, subfile.getContent())
@@ -95,13 +109,16 @@ class CSubfile(object):
             if self._subfileBriefUpToDate:
                 self._subfileBrief.append([fileId, subfileId])
 
-
+            # print(self._subfileCounter)
 
 
     def delSubfile(self, subfile):
+
         fileId, subfileId = subfile.getFileId(), subfile.getSubfileId()
         if self.hasSubfile(fileId, subfileId): # exists subfile, pop the subfile
+            self._idUpToDate = False
             self._subfileBriefUpToDate = False
+
             self._subfileContent = fcs.XOR(self._subfileContent, subfile.getContent())
             self._subfileSet[fileId].remove(subfileId)
             if not self._subfileSet[fileId]: # an empty dict, then pop this file
@@ -125,15 +142,30 @@ class CSubfile(object):
                 for subfileId in self._subfileSet[fileId]:
                     self._subfileBrief.append([fileId, subfileId])
         self._subfileBriefUpToDate = True
+        self._updateId()
+
+    def _updateId(self):
+        if not self._subfileBriefUpToDate:
+            self._updateSubfileBrief()
+        csubfileBrief = []
+        for fileId, subfileId in self._subfileBrief:
+            csubfileBrief.append(str(fileId) + '-' + str(subfileId))
+        csubfileBrief.sort()
+        csubfileBriefStr = "|".join(csubfileBrief)
+        m = hashlib.sha256()
+        m.update(csubfileBriefStr.encode())
+        self._id = m.hexdigest()
+        self._idUpToDate = True
+
 
     """
     nice printout
     """
     def __str__(self):
-        printout = "id:{id} size={size}, counter={counter}: ".format(id=self._id, size=self._subfileSize, counter=self._subfileCounter)
+        printout = "id:{id} \nsize={size}, counter={counter}\n".format(id=self._id, size=self._subfileSize, counter=self._subfileCounter)
 
 
-        printout += self.getSubfileBrief().__str__()
+        printout += "brief:" + self.getSubfileBrief().__str__()
 
         return printout
 
@@ -149,7 +181,7 @@ class CSubfile(object):
     """
     def toString(self):
         d = {
-            'id': self._id,
+            'id': self.getId(),
             'size': self._subfileSize,
             'subfile': self.getSubfileBrief(),
             'content': base64.b64encode(self._subfileContent).decode()
@@ -176,26 +208,25 @@ class CSubfile(object):
                 self._subfileSet[fileId] = {subfileId}
 
 if __name__ == '__main__':
-    id = 20
     subfile11 = Subfile(fileId=1, subfileId=1, subfileSize=1, content=b'\x11')
     subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1, content=b'\x21')
     subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1, content=b'\x31')
     subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1, content=b'\x42')
     subfileSet = {subfile11, subfile21, subfile31, subfile42}
     # subfileSet = {subfile11, subfile42}
-    codedSubfile = CSubfile(id=id, subfileSet=subfileSet)
+    codedSubfile = CSubfile(subfileSet=subfileSet)
     print(codedSubfile)
     codedSubfile.printSubfileContent()
 
     codedSubfileStr = codedSubfile.toString()
-    print(codedSubfileStr)
-
+    # print(codedSubfileStr)
+    #
     codedSubfileFromStr = CSubfile(inStr=codedSubfileStr)
-    codedSubfileFromStr.delSubfile(subfile11)
-    print(codedSubfileFromStr.toString())
+    # codedSubfileFromStr.delSubfile(subfile11)
+    print(codedSubfileFromStr)
     codedSubfileFromStr.printSubfileContent()
-
-    print(codedSubfileFromStr.getSubfileBrief())
+    #
+    # print(codedSubfileFromStr.getSubfileBrief())
 
 
     # print(codedSubfileFromStr.getSubfileBrief())

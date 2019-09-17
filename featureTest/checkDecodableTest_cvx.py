@@ -29,7 +29,7 @@ targetCIdx = [0, 3, 5, 6, 15, 12]
 targetC = np.zeros((M, 1))
 targetC[targetCIdx] = 1
 
-x = targetC.T.dot(Z)
+x = Z.T.dot(targetC)
 
 # x = np.zeros((N,))
 
@@ -49,10 +49,15 @@ reminder = cvxpy.Variable((N, 1), boolean=True)
 # create the constraints
 constraints = []
 # for col in range(N):
+<<<<<<< HEAD:featureTest/checkDecodableTest.py
 for col in range(M): # even though we need to use range(N), since Z is of rank M (ideally), we only need to choose M linear independent columns to get the result. This can largely accelerate the solving process.
     constraint = Z[:, col].T * C + x[0, col] <= bounds[col, 0] * 2 + reminder[col, 0]
+=======
+for col in range(M): # even though we need to use range(N), but N is sufficiently large
+    constraint = Z[:, col].T * C + x[col, 0] <= bounds[col, 0] * 2 + reminder[col, 0]
+>>>>>>> 24b163d6e527a00efdb4243fe5436be5d79d3da6:featureTest/checkDecodableTest_cvx.py
     constraints.append(constraint)
-    constraint = Z[:, col].T * C + x[0, col] >= bounds[col, 0] * 2
+    constraint = Z[:, col].T * C + x[col, 0] >= bounds[col, 0] * 2
     constraints.append(constraint)
 
 # objective function
