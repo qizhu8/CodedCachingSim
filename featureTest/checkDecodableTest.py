@@ -49,7 +49,7 @@ reminder = cvxpy.Variable((N, 1), boolean=True)
 # create the constraints
 constraints = []
 # for col in range(N):
-for col in range(M): # even though we need to use range(N), but N is sufficiently large
+for col in range(M): # even though we need to use range(N), since Z is of rank M (ideally), we only need to choose M linear independent columns to get the result. This can largely accelerate the solving process.
     constraint = Z[:, col].T * C + x[0, col] <= bounds[col, 0] * 2 + reminder[col, 0]
     constraints.append(constraint)
     constraint = Z[:, col].T * C + x[0, col] >= bounds[col, 0] * 2
