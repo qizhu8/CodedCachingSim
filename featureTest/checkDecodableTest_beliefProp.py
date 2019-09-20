@@ -33,17 +33,16 @@ print("The codeword is: \n {}".format(x.T))
 
 #"""
 # parametersd
-maxIter = 100 # number of maximum iterations
 
-C_ = Z.dot(x) % 2
 
-print("Find the result")
-for row in range(M):
-    if C_[row]:
-        print(row)
+"""
+I find out the optimal way.
 
-print("The recovered codeword is: \n {}".format((Z.T.dot(C_) % 2).T))
+Treat Z as a generation matrix but not in standard form.
+Find out the mutation matrix A to make G=AZ a standard generation matrix.
+Use G to find out the standard check matrix H
 
+"""
 
 
 
