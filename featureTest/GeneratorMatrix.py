@@ -64,7 +64,8 @@ class GeneratorMatrix(object):
             self.K, self.N = self.N, self.K
         self.OPList = []
         self.standardStatus = None
-
+        self.RowPermutMat = np.eye(self.K)
+        self.ColPermutMat = np.eye(self.N)
 
 
     def __checkRow(self, r):
@@ -97,6 +98,11 @@ class GeneratorMatrix(object):
             self.G[r1, :] = self.G[r2, :].copy()
             self.G[r2, :] = tempRow.copy()
 
+            # update the RowPermutMat
+            tempRow = self.RowPermutMat[r1, :].copy()
+            self.RowPermutMat[r1, :] = self.RowPermutMat[r2, :].copy()
+            self.RowPermutMat[r2, :] = tempRow.copy()
+
             # record the operation
             if r1 <= r2:
                 self.OPList.append([0, r1, r2])
@@ -124,6 +130,10 @@ class GeneratorMatrix(object):
         self.G[row, :] *= scalar
         self.G[row, :] %= self.p # in GF(p) space
 
+        # update the RowPermutMat
+        self.RowPermutMat[row, :] *= scalar
+        self.RowPermutMat[row, :] %= self.p
+
         # record the operation
         self.OPList.append([1, row, scalar])
 
@@ -148,6 +158,10 @@ class GeneratorMatrix(object):
         self.G[r1, :] += row2
         self.G[r1, :] %= self.p
 
+        # update the RowPermutMat
+        self.RowPermutMat[r1, :] += self.RowPermutMat[r2, :] * scalar
+        self.RowPermutMat[r1, :] %= self.p
+
         # record the operation
         self.OPList.append([2, r1, r2, scalar])
 
@@ -164,9 +178,14 @@ class GeneratorMatrix(object):
             # column indexes out of bound
             return
         if c1 != c2:
-            col1 = self.G[:, c1].copy()
+            tempCol = self.G[:, c1].copy()
             self.G[:, c1] = self.G[:, c2].copy()
-            self.G[:, c2] = col1.copy()
+            self.G[:, c2] = tempCol.copy()
+
+            # update ColPermutMat
+            tempCol = self.ColPermutMat[:, c1].copy()
+            self.ColPermutMat[:, c1] = self.ColPermutMat[:, c2].copy()
+            self.ColPermutMat[:, c2] = tempCol.copy()
 
             # record the operation
             if c1 < c2:
@@ -196,6 +215,10 @@ class GeneratorMatrix(object):
 
         self.G[:, col] *= scalar
         self.G[:, col] %= self.p
+
+        # update ColPermutMat
+        self.ColPermutMat[:, col] *= scalar
+        self.ColPermutMat %= self.p
 
         # record the operation
         self.OPList.append([4, col, scalar])
@@ -386,10 +409,11 @@ if __name__ == '__main__':
     # [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
     # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
 
-    M = 20
-    N = 40
+    M = 10
+    N = 20
 
-    initG = np.random.randint(0, 2, size=(M, N))
+    # initG = np.random.randint(0, 2, size=(M, N))
+    initG = np.eye(M, N)
 
     G = GeneratorMatrix(G=initG, p=2, verbose=False)
     print("init G")
@@ -435,3 +459,15 @@ if __name__ == '__main__':
             print('x:' + XList[:, i].__str__())
         else:
             print('Codeword {i} is good!'.format(i=i))
+
+    RowPermutMat = G.RowPermutMat
+    ColPermutMat = G.ColPermutMat
+    print("Row Permut Mat")
+    print(RowPermutMat)
+    print("Col Permut Mat")
+    print(ColPermutMat)
+
+
+    G_ = RowPermutMat.dot(initG).dot(ColPermutMat) % 2
+    print("G")
+    print(G_)
