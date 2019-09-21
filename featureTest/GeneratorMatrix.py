@@ -57,7 +57,7 @@ class GeneratorMatrix(object):
     def setG(self, G):
         if G is None:
             return
-        self.G = np.asarray(G)
+        self.G = np.asarray(G).copy()
         self.K, self.N = self.G.shape
         if self.K > self.N:
             self.G = self.G.T
@@ -159,8 +159,14 @@ class GeneratorMatrix(object):
         self.G[r1, :] %= self.p
 
         # update the RowPermutMat
-        self.RowPermutMat[r1, :] += self.RowPermutMat[r2, :] * scalar
-        self.RowPermutMat[r1, :] %= self.p
+        # self.RowPermutMat[r1, :] += self.RowPermutMat[r2, :] * scalar
+        # self.RowPermutMat[r1, :] %= self.p
+        multP = np.eye(self.K)
+        multP[r1, r2] = scalar
+        # rst1 = multP.dot(self.RowPermutMat)
+        self.RowPermutMat = multP.dot(self.RowPermutMat)
+
+
 
         # record the operation
         self.OPList.append([2, r1, r2, scalar])
@@ -409,13 +415,13 @@ if __name__ == '__main__':
     # [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
     # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]])
 
-    M = 10
-    N = 20
+    M = 30
+    N = 60
 
-    # initG = np.random.randint(0, 2, size=(M, N))
-    initG = np.eye(M, N)
+    initG = np.random.randint(0, 2, size=(M, N))
+    # initG = np.eye(M, N)
 
-    G = GeneratorMatrix(G=initG, p=2, verbose=False)
+    G = GeneratorMatrix(G=initG.copy(), p=2, verbose=True)
     print("init G")
     # print(G)
 
@@ -435,12 +441,12 @@ if __name__ == '__main__':
     G.standardize()
 
     print("-"*20)
-    # G.printOps()
+    G.printOps()
     print(G.isStandard())
 
 
     H = G.getH()
-
+    H = H.dot(G.ColPermutMat.T)
     iters = 15
     CList = np.random.randint(0, 2, size=(M, iters))
 
@@ -463,11 +469,9 @@ if __name__ == '__main__':
     RowPermutMat = G.RowPermutMat
     ColPermutMat = G.ColPermutMat
     print("Row Permut Mat")
-    print(RowPermutMat)
+    # print(RowPermutMat)
     print("Col Permut Mat")
-    print(ColPermutMat)
+    # print(ColPermutMat)
 
 
     G_ = RowPermutMat.dot(initG).dot(ColPermutMat) % 2
-    print("G")
-    print(G_)
