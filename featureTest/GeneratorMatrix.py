@@ -159,12 +159,13 @@ class GeneratorMatrix(object):
         self.G[r1, :] %= self.p
 
         # update the RowPermutMat
-        # self.RowPermutMat[r1, :] += self.RowPermutMat[r2, :] * scalar
-        # self.RowPermutMat[r1, :] %= self.p
-        multP = np.eye(self.K)
-        multP[r1, r2] = scalar
+        self.RowPermutMat[r1, :] += self.RowPermutMat[r2, :] * scalar
+        self.RowPermutMat[r1, :] %= self.p
+
+        # multP = np.eye(self.K)
+        # multP[r1, r2] = scalar
         # rst1 = multP.dot(self.RowPermutMat)
-        self.RowPermutMat = multP.dot(self.RowPermutMat) % self.p
+        # self.RowPermutMat = multP.dot(self.RowPermutMat) % self.p
 
 
 
@@ -476,3 +477,4 @@ if __name__ == '__main__':
 
     # check whether RowPermutMat and ColPermutMat are working
     G_ = RowPermutMat.dot(initG).dot(ColPermutMat) % 2
+    print(G_)
