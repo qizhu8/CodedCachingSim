@@ -164,7 +164,7 @@ class GeneratorMatrix(object):
         multP = np.eye(self.K)
         multP[r1, r2] = scalar
         # rst1 = multP.dot(self.RowPermutMat)
-        self.RowPermutMat = multP.dot(self.RowPermutMat)
+        self.RowPermutMat = multP.dot(self.RowPermutMat) % self.p
 
 
 
@@ -338,7 +338,8 @@ class GeneratorMatrix(object):
             self.standardize()
         if self.standardStatus:
             A = self.G[:, self.K:]
-            H = np.concatenate([-A.T, np.eye(self.N - self.K)], axis=1)
+            H = np.concatenate([-A.T, np.eye(self.N - self.K)], axis=1) # H matrix for the standard G, not the original G
+            H = H.dot(self.ColPermutMat.T)
             H %= self.p
             return H
         else:
@@ -469,9 +470,9 @@ if __name__ == '__main__':
     RowPermutMat = G.RowPermutMat
     ColPermutMat = G.ColPermutMat
     print("Row Permut Mat")
-    # print(RowPermutMat)
+    print(RowPermutMat)
     print("Col Permut Mat")
     # print(ColPermutMat)
 
-
+    # check whether RowPermutMat and ColPermutMat are working
     G_ = RowPermutMat.dot(initG).dot(ColPermutMat) % 2
