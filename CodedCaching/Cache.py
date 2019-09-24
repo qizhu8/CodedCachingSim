@@ -24,7 +24,7 @@ class Cache(object):
         self._cache = {} # a dictionary storing the csubfile
         self._usedSpace = 0
         self._subfileIndexing = {} # used to store the index for each uncoded subfile
-        self._Z = {}      # a dictionary of matrixs storing coded subfile info for each subfile size
+        self._Z = {}      # a dictionary storing the coded subfiles in cache of each coded subfile size. E.g. _Z[1] is a 2-d matrix in GF(2)
         self._ZUpToDate = {}
         if inStr:
             self.fromString(inStr)
@@ -119,13 +119,23 @@ class Cache(object):
 
     def _genZ(self, subfileSize):
         """
-        Generate a matrix for each coded subfile in cache.
+        Generate a matrix for coded subfiles of chosen size in cache.
+        E.g.
+        [
+            0, 1, 0, 0
+            0, 0, 1, 1
+            1, 0, 1, 0
+        ]
+        means that there are three subfiles in cache.
+            1. subfile is subfile 2,
+            2. subfile 3 XOR subfile 4,
+            3. subfile 1 XOR subfile 3
         """
 
         if subfileSize in self._ZUpToDate and self._ZUpToDate[subfileSize]:
             return
         # collect uncoded subfile id
-        tag2id = {}
+        tag2id = {} # tag: fileId-subfileId   id: the column of subfile in _Z
         id2tag = {}
         curId = 0
         tgtSubfileIdList = []
@@ -142,8 +152,8 @@ class Cache(object):
                     curId += 1
 
         # curId now is the num of distinct uncodedsubfiles
-        print(tag2id)
-        print(id2tag)
+        # print(tag2id)
+        # print(id2tag)
 
         self._Z[subfileSize] = np.zeros((len(tgtSubfileIdList), curId))
         for row, csubfileId in enumerate(tgtSubfileIdList):
@@ -154,7 +164,7 @@ class Cache(object):
                 self._Z[subfileSize][row, curId] = 1
 
         self._ZUpToDate[subfileSize] = True
-        print(self._Z[subfileSize])
+        # print(self._Z[subfileSize])
 
 
 
@@ -251,14 +261,14 @@ if __name__=='__main__':
 
 
 
-    uncodedsubfile11 = CSubfile(id=11, subfileSet={subfile11})
-    uncodedsubfile21 = CSubfile(id=21, subfileSet={subfile21})
-    uncodedsubfile31 = CSubfile(id=31, subfileSet={subfile31})
-    uncodedsubfile42 = CSubfile(id=42, subfileSet={subfile42})
+    uncodedsubfile11 = CSubfile(subfileSet={subfile11})
+    uncodedsubfile21 = CSubfile(subfileSet={subfile21})
+    uncodedsubfile31 = CSubfile(subfileSet={subfile31})
+    uncodedsubfile42 = CSubfile(subfileSet={subfile42})
 
     subfileSet1 = {subfile21, subfile31, subfile42}
 
-    codedSubfile1 = CSubfile(id=30, subfileSet=subfileSet1)
+    codedSubfile1 = CSubfile(subfileSet=subfileSet1)
 
     cache = Cache(M=20)
     cache.addCacheSubfile(uncodedsubfile11)
@@ -267,9 +277,11 @@ if __name__=='__main__':
     cache.addCacheSubfile(uncodedsubfile42)
     cache.addCacheSubfile(codedSubfile1)
 
-    print(cache)
+    # print(cache)
 
     cache._genZ(1)
+
+
     #
     # cacheStr = cache.toString()
     #
