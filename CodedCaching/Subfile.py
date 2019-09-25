@@ -47,7 +47,9 @@ class Subfile(object):
 
     def getContent(self):
         return self._content
-
+        
+    def copy(self):
+        return copy.deepcopy(self)
     """
     nice printout
     """

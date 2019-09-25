@@ -7,6 +7,7 @@ A First Course in Coding Theory by Raymond Hill (OUP, 1986) Theorem 5.4 and Theo
 """
 
 import numpy as np
+import copy
 
 class GeneratorMatrix(object):
     """docstring for GeneratorMatrix."""
@@ -67,6 +68,9 @@ class GeneratorMatrix(object):
         self.standardStatus = None
         self.RowPermutMat = np.eye(self.K)
         self.ColPermutMat = np.eye(self.N)
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
     def __checkRow(self, r):

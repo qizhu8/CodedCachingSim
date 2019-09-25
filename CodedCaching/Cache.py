@@ -4,10 +4,12 @@
 import json
 import base64
 import numpy as np
+import copy
 
 from Subfile import Subfile
 from CSubfile import CSubfile
 from GeneratorMatrix import GeneratorMatrix
+from BitSequence import BitSequence
 
 class Cache(object):
     """
@@ -61,6 +63,9 @@ class Cache(object):
 
     def getUsedSpace(self):
         return self._usedSpace
+
+    def copy(self):
+        return copy.copy(self)
 
     """
     add/del/check cache subfile
@@ -134,7 +139,8 @@ class Cache(object):
         """
 
         if subfileSize in self._ZUpToDate and self._ZUpToDate[subfileSize]:
-            return self._Z[subfileSize]
+            return copy.deepcopy(self._Z[subfileSize])
+            # return self._Z[subfileSize][0].copy(), self._Z[subfileSize][1].copy(), self._Z[subfileSize][2].copy(), self._Z[subfileSize][3].copy()
         # collect uncoded subfile id
         tag2id = {} # tag: fileId-subfileId   id: the column of subfile in _Z
         id2tag = {}
@@ -174,7 +180,8 @@ class Cache(object):
         self._ZUpToDate[subfileSize] = True
 
         # print(Z)
-        return self._Z[subfileSize]
+        return copy.deepcopy(self._Z[subfileSize])
+        # return self._Z[subfileSize][0].copy(), self._Z[subfileSize][1].copy(), self._Z[subfileSize][2].copy(), self._Z[subfileSize][3].copy()
 
 
 
@@ -200,10 +207,22 @@ class Cache(object):
             return False, []
 
     def _decodeBitSequence(self, bitSequence, soft=False):
+        CSubfileDict = bitSequence.getCSubfileDict()
+        decodingFlag = False
+        rstSubfileList = []
+        for csubfileId in CSubfileDict:
+            # print("decoding " + csubfileId)
+            # print(CSubfileDict[csubfileId])
+            flag, rstList = self._decodeCSubfile(CSubfileDict[csubfileId], soft)
+            decodingFlag |= flag
+            rstSubfileList += rstList
 
-        return False, []
+            # print("%r %s" % (flag, rstList))
+        return decodingFlag, rstSubfileList
 
     def _decodeCSubfile(self, csubfile, soft=False):
+        csubfile = csubfile.copy()
+        # print("decoding " + csubfile.getId())
 
         csubfileSize = csubfile.getSubfileSize()
         csubfileBrief = csubfile.getSubfileBrief()
@@ -262,7 +281,7 @@ class Cache(object):
                         if decodingIdxSet[checkCSubfileId][0]:
                             rstSubfile.XORSubfile(self._cache[tgtSubfileIdList[checkCSubfileId]])
 
-                return True, [rstSubfile]
+                return True, [rstSubfile.downgradeToSubfile()]
             else:
                 return False, []
             # csubfileVector = np.concatenate([csubfileVector, np.ones((1, numOfUnseenSubfiles))], axis=1)
@@ -271,41 +290,40 @@ class Cache(object):
         if numOfUnseenSubfiles == 0:
             rstSubfileList = []
             # we can only check each uncoded subfile
-            csubfileVectorTmp = csubfileVector.copy().T
+            # csubfileVectorTmp = csubfileVector.copy().T
+            csubfileVectorMat = (csubfileVector.copy().T.dot(np.ones((1, Z.N))) + np.eye(Z.N)) %2
+            csubfileInSpace = Z.isInSpace(csubfileVectorMat)
+
             for id in range(Z.N):
-                csubfileVectorTmp[id][0] = (csubfileVectorTmp[id][0] + 1) % 2
+                if not csubfileInSpace[id]:
+                    continue
+                csubfileVectorTmp = np.expand_dims(csubfileVectorMat[:, id], axis=0).T
                 # print("checking id=%d tag:%s" % (id, id2tag[id]))
                 # print("csubfileVectorTmp")
                 # print(csubfileVectorTmp.T)
-                if Z.isInSpace(csubfileVectorTmp)[0]:
-                    decodingIdxSet = Z.decode(csubfileVectorTmp)
+                decodingIdxSet = Z.decode(csubfileVectorTmp)
 
-                    # print("csubfileVector")
-                    # print(csubfileVector)
-                    #
-                    # print("Z")
-                    # print(Z.initG)
-                    # print("decodingIdxSet")
-                    # print(decodingIdxSet.T)
+                # print("csubfileVector")
+                # print(csubfileVector)
+                #
+                # print("Z")
+                # print(Z.initG)
+                # print("decodingIdxSet")
+                # print(decodingIdxSet.T)
 
-                    fileId, subfileId = list(map(int, id2tag[subfileId].split('-')))
-                    if soft:
-                        # if only need the soft decoding result, no need to decode the content,
-                        # just return a Subfile instance with proper fileId and subfileId
-                        rstSubfile = Subfile(fileId=fileId, subfileId=subfileId, subfileSize=csubfileSize, content=b'')
-
-                    else:
-                        # follow the decodingIdxSet to actually decode the subfile
-                        rstSubfile = csubfile.copy()
-                        for checkCSubfileId in range(decodingIdxSet.shape[0]):
-                            if decodingIdxSet[checkCSubfileId][0]:
-                                rstSubfile.XORSubfile(self._cache[tgtSubfileIdList[checkCSubfileId]])
-                    rstSubfileList.append(rstSubfile)
+                fileId, subfileId = list(map(int, id2tag[subfileId].split('-')))
+                if soft:
+                    # if only need the soft decoding result, no need to decode the content,
+                    # just return a Subfile instance with proper fileId and subfileId
+                    rstSubfile = Subfile(fileId=fileId, subfileId=subfileId, subfileSize=csubfileSize, content=b'')
 
                 else:
-                    pass # do nothing.
-
-                csubfileVectorTmp[id][0] = (csubfileVectorTmp[id][0] + 1) % 2
+                    # follow the decodingIdxSet to actually decode the subfile
+                    rstSubfile = csubfile.copy()
+                    for checkCSubfileId in range(decodingIdxSet.shape[0]):
+                        if decodingIdxSet[checkCSubfileId][0]:
+                            rstSubfile.XORSubfile(self._cache[tgtSubfileIdList[checkCSubfileId]])
+                rstSubfileList.append(rstSubfile.downgradeToSubfile())
 
             return len(rstSubfileList)>0, rstSubfileList
 
@@ -401,28 +419,49 @@ if __name__=='__main__':
     cache.addCacheSubfile(codedSubfile2)
     cache.addCacheSubfile(codedSubfile3)
 
+
     # decode csubfile
     print('='*20)
-    decodable, decodeRstList = cache._decodeCSubfile(decodableSubfile1)
+    decodable, decodeRstList = cache.decode(CSubfile(subfileSet={subfile42}))
     print("decodable? %r" % decodable)
     for subfile in decodeRstList:
         print(subfile)
+    print("GT")
+    print(subfile42)
+
+    # decode csubfile
+    print('='*20)
+    decodable, decodeRstList = cache.decode(decodableSubfile1)
+    print("decodable? %r" % decodable)
+    for subfile in decodeRstList:
+        print(subfile)
+    print("GT")
+    print(subfile21)
 
     print('-'*30)
-    decodable, decodeRstList = cache._decodeCSubfile(decodableSubfile2)
+    decodable, decodeRstList = cache.decode(decodableSubfile2)
     print("decodable? %r" % decodable)
     for subfile in decodeRstList:
         print(subfile)
+    print("GT")
+    print(subfile51)
 
     print('-'*30)
-    decodable, decodeRstList = cache._decodeCSubfile(undecodableSubfile1)
+    decodable, decodeRstList = cache.decode(undecodableSubfile1)
     print("decodable? %r" % decodable)
     for subfile in decodeRstList:
         print(subfile)
 
 
-    #
-    # cacheStr = cache.toString()
-    #
-    # cacheFromStr = Cache(inStr=cacheStr)
-    # print(cacheFromStr)
+    # decode bitSequence
+    print('='*30)
+    bitSequence = BitSequence()
+    bitSequence.addCodedSubfile(decodableSubfile1)
+    bitSequence.addCodedSubfile(decodableSubfile2)
+    bitSequence.addCodedSubfile(undecodableSubfile1)
+
+    decodable, decodeRstList = cache.decode(bitSequence)
+    print("decodable? %r" % decodable)
+
+    for subfile in decodeRstList:
+        print(subfile)

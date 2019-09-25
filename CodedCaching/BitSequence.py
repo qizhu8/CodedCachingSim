@@ -56,13 +56,21 @@ class BitSequence(object):
             self._codedSubfileDict.pop(codedSubfileId)
             self._codedSubfileCounter -= 1
 
+    def getCSubfileDict(self):
+        return self._codedSubfileDict
+        
+    def copy(self):
+        return copy.deepcopy(self)
     """
     nice printout
     """
     def __str__(self):
         printout = """"""
-        for codedSubfileId in self._codedSubfileDict:
-            printout += self._codedSubfileDict[codedSubfileId].__str__() + '\n'
+        for idx, codedSubfileId in enumerate(self._codedSubfileDict):
+            printout += "{id}:\n{csubfile}\n".format(
+                id=idx,
+                csubfile=self._codedSubfileDict[codedSubfileId].__str__()
+                )
         return printout
 
     """
@@ -126,9 +134,9 @@ if __name__=='__main__':
     subfileSet2 = {subfile12, subfile22, subfile32, subfile42}
     subfileSet3 = {subfile13, subfile23, subfile33, subfile43}
 
-    codedSubfile1 = CSubfile(id=1, subfileSet=subfileSet1)
-    codedSubfile2 = CSubfile(id=2, subfileSet=subfileSet2)
-    codedSubfile3 = CSubfile(id=3, subfileSet=subfileSet3)
+    codedSubfile1 = CSubfile(subfileSet=subfileSet1)
+    codedSubfile2 = CSubfile(subfileSet=subfileSet2)
+    codedSubfile3 = CSubfile(subfileSet=subfileSet3)
 
     bitSequence = BitSequence()
     bitSequence.addCodedSubfile(codedSubfile1)

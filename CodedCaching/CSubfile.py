@@ -3,6 +3,7 @@
 import functionSet as fcs
 from Subfile import Subfile
 import json
+import copy
 import base64
 import hashlib
 
@@ -71,27 +72,7 @@ class CSubfile(object):
         return self._subfileBrief
 
     def copy(self):
-        # self._id = None # id is computed by sha256(brief)
-        # self._subfileSet = {} # a 2-level dictionary. First level for fileId, second level for subfileId, value is subfile instance
-        # self._subfileSize = 0
-        # self._subfileCounter = 0
-        # self._subfileBrief = []
-        # self._subfileBriefUpToDate = False # True: matches _codedSubfileDict
-        # self._idUpToDate = False
-        # self._subfileContent = b''
-
-        newCSubfile = CSubfile()
-        newCSubfile._id = self._id
-        newCSubfile._subfileSet = self._subfileSet.copy()
-        newCSubfile._subfileSize = self._subfileSize
-        newCSubfile._subfileCounter = self._subfileCounter
-        newCSubfile._subfileBrief = self._subfileBrief.copy()
-        newCSubfile._subfileBriefUpToDate = self._subfileBriefUpToDate
-        newCSubfile._idUpToDate = self._idUpToDate
-        newCSubfile._subfileContent = self._subfileContent
-
-        return newCSubfile
-
+        return copy.deepcopy(self)
 
     """
     add/remove/check subfile

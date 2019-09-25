@@ -7,6 +7,7 @@ A First Course in Coding Theory by Raymond Hill (OUP, 1986) Theorem 5.4 and Theo
 """
 
 import numpy as np
+import copy
 
 class GeneratorMatrix(object):
     """docstring for GeneratorMatrix."""
@@ -57,6 +58,7 @@ class GeneratorMatrix(object):
     def setG(self, G):
         if G is None:
             return
+        self.initG = np.asarray(G).copy()
         self.G = np.asarray(G).copy()
         self.K, self.N = self.G.shape
         # if self.K > self.N:
@@ -66,6 +68,9 @@ class GeneratorMatrix(object):
         self.standardStatus = None
         self.RowPermutMat = np.eye(self.K)
         self.ColPermutMat = np.eye(self.N)
+
+    def copy(self):
+        return copy.deepcopy(self)
 
 
     def __checkRow(self, r):
@@ -433,8 +438,10 @@ if __name__ == '__main__':
     M = 30
     N = 60
 
-    initG = np.random.randint(0, 2, size=(M, N))
-    # initG = np.eye(M, N)
+    # initG = np.random.randint(0, 2, size=(M, N))
+    initG = np.asarray( [[1, 1, 1, 0, 0, 0],
+                         [0, 1, 0, 1, 1, 0],
+                         [0, 0, 1, 1, 0, 1]])
 
     G = GeneratorMatrix(G=initG.copy(), p=2, verbose=True)
     print("init G")
@@ -463,7 +470,7 @@ if __name__ == '__main__':
     H = G.getH()
     H = H.dot(G.ColPermutMat.T)
     iters = 15
-    CList = np.random.randint(0, 2, size=(M, iters))
+    CList = np.random.randint(0, 2, size=(G.K, iters))
 
     XList = initG.T.dot(CList) % 2
 
@@ -491,3 +498,5 @@ if __name__ == '__main__':
     # check whether RowPermutMat and ColPermutMat are working
     G_ = RowPermutMat.dot(initG).dot(ColPermutMat) % 2
     print(G_)
+
+    print(G.isInSpace(np.array([[0, 1, 1, 1, 1, 0]]).T))
