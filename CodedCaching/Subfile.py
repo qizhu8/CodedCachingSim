@@ -4,6 +4,7 @@
 import json
 import base64
 
+
 class Subfile(object):
     """docstring for Subfile."""
 
@@ -51,7 +52,9 @@ class Subfile(object):
     nice printout
     """
     def __str__(self):
-        return '-'.join([str(self._id[0]), str(self._id[1])])
+        printout = '-'.join([str(self._id[0]), str(self._id[1])])
+        printout += "  " + base64.b64encode(self._content).decode()
+        return printout
 
     """
     serilization

@@ -47,9 +47,13 @@ print(rst)
 
 
 # We can find the corresponding C for X
-Colx = G.ColPermutMat.T.dot(x1) %2
-Rowc = Colx[:M, :]
-c_dec = G.RowPermutMat.T.dot(Rowc) %2
+"""
+    decoding detail
+    # Colx = G.ColPermutMat.T.dot(x1) %2
+    # Rowc = Colx[:M, :]
+    # c_dec = G.RowPermutMat.T.dot(Rowc) %2
+"""
+c_dec = G.decode(x1)
 print(c_dec.T)
 print(GTc.T+0.0)
 

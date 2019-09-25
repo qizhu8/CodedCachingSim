@@ -70,6 +70,29 @@ class CSubfile(object):
             self._updateSubfileBrief()
         return self._subfileBrief
 
+    def copy(self):
+        # self._id = None # id is computed by sha256(brief)
+        # self._subfileSet = {} # a 2-level dictionary. First level for fileId, second level for subfileId, value is subfile instance
+        # self._subfileSize = 0
+        # self._subfileCounter = 0
+        # self._subfileBrief = []
+        # self._subfileBriefUpToDate = False # True: matches _codedSubfileDict
+        # self._idUpToDate = False
+        # self._subfileContent = b''
+
+        newCSubfile = CSubfile()
+        newCSubfile._id = self._id
+        newCSubfile._subfileSet = self._subfileSet.copy()
+        newCSubfile._subfileSize = self._subfileSize
+        newCSubfile._subfileCounter = self._subfileCounter
+        newCSubfile._subfileBrief = self._subfileBrief.copy()
+        newCSubfile._subfileBriefUpToDate = self._subfileBriefUpToDate
+        newCSubfile._idUpToDate = self._idUpToDate
+        newCSubfile._subfileContent = self._subfileContent
+
+        return newCSubfile
+
+
     """
     add/remove/check subfile
     """
@@ -135,6 +158,42 @@ class CSubfile(object):
                 return True
         return False
 
+    """
+    XOR csubfile
+    """
+    def XORSubfile(self, csubfile):
+        if isinstance(csubfile, Subfile):
+            csubfile = CSubfile(subfileSet={csubfile})
+
+        csubfileBrief = csubfile.getSubfileBrief()
+        # update the _subfileSet
+        for fileId, subfileId in csubfileBrief:
+            if self.hasSubfile(fileId, subfileId):
+                # after XORing, this subfile will be cancelled out
+                self._idUpToDate = False
+                self._subfileBriefUpToDate = False
+
+                self._subfileSet[fileId].remove(subfileId)
+                if not self._subfileSet[fileId]: # an empty dict, then pop this file
+                    self._subfileSet.pop(fileId)
+                self._subfileCounter -= 1
+            else:
+                # after XORing, this subfile will be inserted
+                self._idUpToDate = False
+                self._subfileBriefUpToDate = False
+
+                if fileId in self._subfileSet:
+                    self._subfileSet[fileId].add(subfileId)
+                else:
+                    self._subfileSet[fileId] = {subfileId}
+
+                self._subfileCounter += 1
+
+        # update the content
+        self._subfileContent = fcs.XOR(self._subfileContent, csubfile.getSubfileContent())
+
+
+
     def _updateSubfileBrief(self):
         if not self._subfileBriefUpToDate:
             self._subfileBrief = []
@@ -157,12 +216,26 @@ class CSubfile(object):
         self._id = m.hexdigest()
         self._idUpToDate = True
 
+    def downgradeToSubfile(self):
+        if self.getSubfileCounter() == 1:
+            brief = self.getSubfileBrief()
+            return Subfile(
+                fileId=brief[0][0],
+                subfileId=brief[0][1],
+                subfileSize=self.getSubfileSize(),
+                content=self.getSubfileContent())
+        else:
+            return None
 
     """
     nice printout
     """
     def __str__(self):
-        printout = "id:{id} \nsize={size}, counter={counter}\n".format(id=self._id, size=self._subfileSize, counter=self._subfileCounter)
+
+        printout = "id:{id} \nsize={size}, counter={counter}\n".format(
+            id=self.getId(),
+            size=self._subfileSize,
+            counter=self._subfileCounter)
 
 
         printout += "brief:" + self.getSubfileBrief().__str__()
@@ -212,25 +285,10 @@ if __name__ == '__main__':
     subfile21 = Subfile(fileId=2, subfileId=1, subfileSize=1, content=b'\x21')
     subfile31 = Subfile(fileId=3, subfileId=1, subfileSize=1, content=b'\x31')
     subfile42 = Subfile(fileId=4, subfileId=2, subfileSize=1, content=b'\x42')
-    subfileSet = {subfile11, subfile21, subfile31, subfile42}
-    # subfileSet = {subfile11, subfile42}
-    codedSubfile = CSubfile(subfileSet=subfileSet)
-    print(codedSubfile)
-    codedSubfile.printSubfileContent()
+    codedSubfile1 = CSubfile(subfileSet={subfile11, subfile21, subfile31, subfile42})
+    codedSubfile2 = CSubfile(subfileSet={           subfile21, subfile31, subfile42})
+    uncodedSubfile = CSubfile(subfileSet={subfile11})
 
-    codedSubfileStr = codedSubfile.toString()
-    # print(codedSubfileStr)
-    #
-    codedSubfileFromStr = CSubfile(inStr=codedSubfileStr)
-    # codedSubfileFromStr.delSubfile(subfile11)
-    print(codedSubfileFromStr)
-    codedSubfileFromStr.printSubfileContent()
-    #
-    # print(codedSubfileFromStr.getSubfileBrief())
-
-
-    # print(codedSubfileFromStr.getSubfileBrief())
-
-    # print("-"*20)
-    # codedSubfileCopy = codedSubfile.copy()
-    # print(codedSubfileCopy)
+    codedSubfile1.XORSubfile(codedSubfile2)
+    print(codedSubfile1)
+    print(uncodedSubfile)
