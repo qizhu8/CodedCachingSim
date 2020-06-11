@@ -36,13 +36,13 @@ class Network():
 
         self.placementDone = False
 
-    def placement(self, isRandom=False, verbose=False):
+    def placement(self, isRandom=False, verboseForUser=False, verboseForCache=False):
         Z = self.server.generateZ(isRandom=isRandom)
         for userId in range(self.K):
             self.userset[userId].setZ(Z[userId, :])
-            if verbose:
+            if verboseForUser:
                 print(self.userset[userId])
-        if verbose:
+        if verboseForCache:
             self.printCacheContent(Z)
 
         self.placementDone = True
@@ -91,10 +91,10 @@ if __name__ == "__main__":
     # N: number of files in the network
     # K: number of users in the network
     # t: M*K/N, 
-    M, N, K, t = -1, 3, 3, 1
+    M, N, K, t = -1, 4, 3, 1
 
     codedCachingNetwork = Network(M=M, N=N, K=K, t=t)
-    codedCachingNetwork.placement(verbose=True)
+    codedCachingNetwork.placement(verboseForCache=True)
     X_D_table = []
     for D in itertools.combinations_with_replacement(range(N), K):
         
