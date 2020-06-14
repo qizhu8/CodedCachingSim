@@ -14,6 +14,7 @@ from tabulate import tabulate
 T_BE_INTEGER = True
 
 class Network():
+
     def __init__(self, M, N, K, t=None):
 
         self.M = M
@@ -84,22 +85,36 @@ class Network():
         header = ["UserId"] + [str(fileId)+"-"+str(subfileId) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
         UserId = np.asarray([range(self.K)]).T
         print(tabulate(np.hstack([UserId, Z]), headers=header))
+    
+    def allD(self):
+        curD = [0] * self.K
+        while curD != [self.N-1]*self.K:
+            yield curD
+            for checkPos in range(self.K-1, -1, -1):
+                if curD[checkPos] < self.N-1:
+                    curD[checkPos] += 1
+                    break
+                else:
+                    curD[checkPos] = 0
+        yield curD
 
 if __name__ == "__main__":
     # if t is specified, M is not needed. Currently, I only consider t to be a positive integer.
-    # M: unified cache size per user 
+    # M: unified cache size per user (if t is specified, M is not useful anymore)
     # N: number of files in the network
     # K: number of users in the network
     # t: M*K/N, 
-    M, N, K, t = -1, 4, 3, 1
+    M, N, K, t = -1, 2, 4, 1
 
     codedCachingNetwork = Network(M=M, N=N, K=K, t=t)
     codedCachingNetwork.placement(verboseForCache=True)
     X_D_table = []
-    for D in itertools.combinations_with_replacement(range(N), K):
-        
-        _, X = codedCachingNetwork.delivery(verbose=False, D=D)
+    # for D in itertools.combinations_with_replacement(range(N), K):
+    for D in codedCachingNetwork.allD():
+        D, X = codedCachingNetwork.delivery(verbose=False, D=D) # generate X based on D
         X_D_table.append([D.__str__(), codedCachingNetwork.printableServerTransmission(X)])
 
     header = ["D", "X"]
     print(tabulate(X_D_table, headers=header))
+
+
