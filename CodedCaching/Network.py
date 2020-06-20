@@ -58,15 +58,15 @@ class Network():
         if verbose:
             print("D:", D)
         
-        X = self.server.generateX(D)
+        X, groupList = self.server.generateX(D)
 
         if verbose:
             print("Server Transmission is:")
             print(self.printableServerTransmission(X))
         
-        return D, X
+        return D, X, groupList
 
-    def printableServerTransmission(self, X):
+    def printableServerTransmission(self, X, inList=False):
         printoutList = []
         totalRow, totalCol = X.shape
         for row in range(totalRow):
@@ -79,7 +79,11 @@ class Network():
             if len(subfileList):
                 printoutList.append(" + ".join(subfileList))
                 # printoutList.append("{id}:{subfileInfo}".format(id=row, subfileInfo=" + ".join(subfileList)))
-        return " || ".join(printoutList)
+        if not inList:
+            return " || ".join(printoutList)
+        else:
+            return printoutList
+
     
     def printCacheContent(self, Z):
         header = ["UserId"] + [str(fileId)+"-"+str(subfileId) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
@@ -104,17 +108,18 @@ if __name__ == "__main__":
     # N: number of files in the network
     # K: number of users in the network
     # t: M*K/N, 
-    M, N, K, t = -1, 2, 4, 1
+    M, N, K, t = -1, 2, 4, 2
 
     codedCachingNetwork = Network(M=M, N=N, K=K, t=t)
     codedCachingNetwork.placement(verboseForCache=True)
     X_D_table = []
     # for D in itertools.combinations_with_replacement(range(N), K):
     for D in codedCachingNetwork.allD():
-        D, X = codedCachingNetwork.delivery(verbose=False, D=D) # generate X based on D
-        X_D_table.append([D.__str__(), codedCachingNetwork.printableServerTransmission(X)])
+        D, X, groupList = codedCachingNetwork.delivery(verbose=False, D=D) # generate X based on D
+        X_D_table.append([D.__str__()] + codedCachingNetwork.printableServerTransmission(X, inList=True))
 
-    header = ["D", "X"]
+    # header = ["D", "X"]
+    header = ["D"] + groupList
     print(tabulate(X_D_table, headers=header))
 
 

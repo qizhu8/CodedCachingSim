@@ -69,6 +69,7 @@ class Server():
         This function generates all coded subfiles in the server transmission by iterating all groups of t+1 users. 
         """
         codedSubfileList = np.zeros((self.numOfCodedSubfiles, self.numOfSubfile*self.N), dtype=bool)
+        groupList = []      # indicating for whom each coded subfile is generated
         D = np.asarray(D, dtype=int)
         codedSubfileIdx = 0
         for group in itertools.combinations(range(self.K), self.t+1):
@@ -97,9 +98,10 @@ class Server():
                 codedSubfileList[codedSubfileIdx, startCol:startCol+self.numOfSubfile] += \
                     Z_select_sum[startCol:startCol+self.numOfSubfile] & ~Z_select[row, startCol:startCol+self.numOfSubfile] 
 
+            groupList.append(group)
             codedSubfileIdx += 1
         
-        return codedSubfileList
+        return codedSubfileList, groupList
 
     
 if __name__ == "__main__":
