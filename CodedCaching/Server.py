@@ -46,15 +46,21 @@ class Server():
     def _permutateZ(self):
         """Randomly switch two columns in Z belongs to the same file.
             Switch two columns won't change the cache capacity, the number subfiles each user has, the number of users each subfile is cached by
+            Switch two rows belongs to the same file of two users also won't break the rule.
         """
         if not self.placementDone:
             self._placementPrep_std()
         
         columnOrder = np.asarray([])
         for fileIdx in range(self.N):
-            permutationOrder = np.random.permutation(self.numOfSubfile)
             startCol = fileIdx * self.numOfSubfile
-            columnOrder = np.concatenate([columnOrder, permutationOrder+startCol])
+            # permute between users
+            rowPermutOrder = np.random.permutation(self.K)
+            self.Z[:, startCol:startCol+self.numOfSubfile] = self.Z[rowPermutOrder, startCol:startCol+self.numOfSubfile]
+
+            # permute between subfiles (but we only can generate the permutation order for current file related subfiles)
+            colPermutOrder = np.random.permutation(self.numOfSubfile)
+            columnOrder = np.concatenate([columnOrder, colPermutOrder+startCol])
         columnOrder = np.asarray(columnOrder, dtype=int)
         self.Z = self.Z[:, columnOrder]
     
