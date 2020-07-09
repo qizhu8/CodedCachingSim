@@ -6,7 +6,7 @@ from scipy import special
 import itertools
 
 class Server():
-    def __init__(self, M, N, K, t):
+    def __init__(self, M, N, K, t, fileId2Alphabet=False):
         self.M = M
         self.N = int(N)
         self.K = int(K)
@@ -18,7 +18,9 @@ class Server():
         self.Z = None
 
         self.placementDone = False
-    
+
+        self.fileId2Alphabet=fileId2Alphabet    # true: file indexes are represented in A-Z rather than numbers
+
     """
     ========Placement Phase Related=========
     """
@@ -109,6 +111,9 @@ class Server():
             codedSubfileIdx += 1
         
         return codedSubfileList, groupList
+
+    def setPrintoutMode(self, fileId2Alphabet):
+        self.fileId2Alphabet = fileId2Alphabet
 
     
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ T_BE_INTEGER = True
 
 class Network():
 
-    def __init__(self, M, N, K, t=None):
+    def __init__(self, M, N, K, t=None, fileId2Alphabet=False):
 
         self.M = M
         self.N = int(N)
@@ -24,6 +24,8 @@ class Network():
             self.t = self.M * self.K / self.N
         else:
             self.t = t
+            self.M = self.t * self.N/self.K  # make up the missing block of M 
+
 
         if T_BE_INTEGER and self.t != int(self.t):
             raise Exception("Make sure t = M*K/N is an integer")
@@ -31,19 +33,22 @@ class Network():
         self.numOfSubfile = int(special.comb(self.K, self.t))
         self.numOfCodedSubfiles = int(special.comb(self.K, self.t+1))
 
-        self.server = Server(self.M, self.N, self.K, self.t)
-        self.userset = [User(id, self.M, self.N, self.K, self.t) for id in range(self.K)]
+        self.fileId2Alphabet = fileId2Alphabet
+
+        self.server = Server(self.M, self.N, self.K, self.t, self.fileId2Alphabet)
+        self.userset = [User(id, self.M, self.N, self.K, self.t, fileId2Alphabet=fileId2Alphabet) for id in range(self.K)]
 
         self.placementDone = False
 
-    def placement(self, isRandom=False, verboseForUser=False, verboseForCache=False, fileId2Alphabet=True):
+    def placement(self, isRandom=False, verboseForUser=False, verboseForCache=False):
         Z = self.server.generateZ(isRandom=isRandom)
         for userId in range(self.K):
             self.userset[userId].setZ(Z[userId, :])
             if verboseForUser:
+                # self.userset[userId].printUserDetail(fileId2Alphabet=fileId2Alphabet)
                 print(self.userset[userId])
         if verboseForCache:
-            self.printCacheContent(Z, fileId2Alphabet=True)
+            self.printCacheContent(Z)
 
         self.placementDone = True
     
@@ -87,8 +92,8 @@ class Network():
             return printoutList
 
     
-    def printCacheContent(self, Z, fileId2Alphabet=True):
-        if fileId2Alphabet:
+    def printCacheContent(self, Z):
+        if self.fileId2Alphabet:
             header = ["UserId"] + [chr(65+fileId)+""+str(subfileId+1) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
         else:
             header = ["UserId"] + [str(fileId)+"-"+str(subfileId) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
@@ -106,6 +111,12 @@ class Network():
                 else:
                     curD[checkPos] = 0
         yield curD
+    
+    def __str__(self):
+        print_template = """M:{M}\nN:{N}\nK:{K}\nt:{t}"""
+
+        return print_template.format(M=self.M, N=self.N, K=self.K, t=self.t)
+
 
 if __name__ == "__main__":
     # if t is specified, M is not needed. Currently, I only consider t to be a positive integer.
@@ -114,11 +125,12 @@ if __name__ == "__main__":
     # K: number of users in the network
     # t: M*K/N, 
     # M, N, K, t = -1, 3, 3, 1
-    M, N, K, t = -1, 5, 4, 2
+    M, N, K, t = -1, 3, 5, 3
     # M, N, K, t = -1, 4, 5, 2
 
-    codedCachingNetwork = Network(M=M, N=N, K=K, t=t)
-    codedCachingNetwork.placement(verboseForCache=True, isRandom=True, fileId2Alphabet=True)
+    codedCachingNetwork = Network(M=M, N=N, K=K, t=t, fileId2Alphabet=True)
+    print(codedCachingNetwork)
+    codedCachingNetwork.placement(verboseForCache=True, verboseForUser=True, isRandom=True)
     X_D_table = []
     # for D in itertools.combinations_with_replacement(range(N), K):
     for D in codedCachingNetwork.allD():
