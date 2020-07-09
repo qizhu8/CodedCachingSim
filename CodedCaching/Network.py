@@ -31,20 +31,19 @@ class Network():
         self.numOfSubfile = int(special.comb(self.K, self.t))
         self.numOfCodedSubfiles = int(special.comb(self.K, self.t+1))
 
-
         self.server = Server(self.M, self.N, self.K, self.t)
         self.userset = [User(id, self.M, self.N, self.K, self.t) for id in range(self.K)]
 
         self.placementDone = False
 
-    def placement(self, isRandom=False, verboseForUser=False, verboseForCache=False):
+    def placement(self, isRandom=False, verboseForUser=False, verboseForCache=False, fileId2Alphabet=True):
         Z = self.server.generateZ(isRandom=isRandom)
         for userId in range(self.K):
             self.userset[userId].setZ(Z[userId, :])
             if verboseForUser:
                 print(self.userset[userId])
         if verboseForCache:
-            self.printCacheContent(Z)
+            self.printCacheContent(Z, fileId2Alphabet=True)
 
         self.placementDone = True
     
@@ -66,7 +65,7 @@ class Network():
         
         return D, X, groupList
 
-    def printableServerTransmission(self, X, inList=False):
+    def printableServerTransmission(self, X, inList=False, fileId2Alphabet=False):
         printoutList = []
         totalRow, totalCol = X.shape
         for row in range(totalRow):
@@ -75,7 +74,10 @@ class Network():
                 if X[row][col]:
                     fileId = int(col / self.numOfSubfile)
                     subfileId = int(col % self.numOfSubfile)
-                    subfileList.append("{fileId}-{subfileId}".format(fileId=fileId, subfileId=subfileId))
+                    if fileId2Alphabet:
+                        subfileList.append("{fileIdChr}{subfileId}".format(fileIdChr=chr(65+fileId), subfileId=subfileId+1))
+                    else:
+                        subfileList.append("{fileId}-{subfileId}".format(fileId=fileId, subfileId=subfileId))
             if len(subfileList):
                 printoutList.append(" + ".join(subfileList))
                 # printoutList.append("{id}:{subfileInfo}".format(id=row, subfileInfo=" + ".join(subfileList)))
@@ -85,8 +87,11 @@ class Network():
             return printoutList
 
     
-    def printCacheContent(self, Z):
-        header = ["UserId"] + [str(fileId)+"-"+str(subfileId) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
+    def printCacheContent(self, Z, fileId2Alphabet=True):
+        if fileId2Alphabet:
+            header = ["UserId"] + [chr(65+fileId)+""+str(subfileId+1) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
+        else:
+            header = ["UserId"] + [str(fileId)+"-"+str(subfileId) for fileId in range(self.N) for subfileId in range(self.numOfSubfile)]
         UserId = np.asarray([range(self.K)]).T
         print(tabulate(np.hstack([UserId, Z]), headers=header))
     
@@ -108,15 +113,18 @@ if __name__ == "__main__":
     # N: number of files in the network
     # K: number of users in the network
     # t: M*K/N, 
-    M, N, K, t = -1, 2, 4, 2
+    # M, N, K, t = -1, 3, 3, 1
+    M, N, K, t = -1, 5, 4, 2
+    # M, N, K, t = -1, 4, 5, 2
 
     codedCachingNetwork = Network(M=M, N=N, K=K, t=t)
-    codedCachingNetwork.placement(verboseForCache=True)
+    codedCachingNetwork.placement(verboseForCache=True, isRandom=True, fileId2Alphabet=True)
     X_D_table = []
     # for D in itertools.combinations_with_replacement(range(N), K):
     for D in codedCachingNetwork.allD():
         D, X, groupList = codedCachingNetwork.delivery(verbose=False, D=D) # generate X based on D
-        X_D_table.append([D.__str__()] + codedCachingNetwork.printableServerTransmission(X, inList=True))
+        D_str = ",".join(list(map(lambda d: chr(65+ d), D)))
+        X_D_table.append(["["+D_str+"]"] + codedCachingNetwork.printableServerTransmission(X, inList=True, fileId2Alphabet=True))
 
     # header = ["D", "X"]
     header = ["D"] + groupList

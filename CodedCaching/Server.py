@@ -34,6 +34,7 @@ class Server():
     def _generateZ_std(self):
         """Standard. The assignment of subfiles follows the order in n-choose-k"""
         subfileIdx = 0
+
         self.Z = np.zeros((self.K, self.N*self.numOfSubfile), dtype=bool)
         for userLst in itertools.combinations(range(self.K), self.t):
             # go through all combinations of t users
