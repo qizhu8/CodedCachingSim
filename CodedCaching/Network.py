@@ -130,11 +130,13 @@ if __name__ == "__main__":
 
     codedCachingNetwork = Network(M=M, N=N, K=K, t=t, fileId2Alphabet=True)
     print(codedCachingNetwork)
-    codedCachingNetwork.placement(verboseForCache=True, verboseForUser=True, isRandom=True)
+    # codedCachingNetwork.placement(verboseForCache=True, verboseForUser=True, isRandom=True)
+    codedCachingNetwork.placement(verboseForCache=True, verboseForUser=True, isRandom=False)
     X_D_table = []
     # for D in itertools.combinations_with_replacement(range(N), K):
     for D in codedCachingNetwork.allD():
         D, X, groupList = codedCachingNetwork.delivery(verbose=False, D=D) # generate X based on D
+        groupList
         D_str = ",".join(list(map(lambda d: chr(65+ d), D)))
         X_D_table.append(["["+D_str+"]"] + codedCachingNetwork.printableServerTransmission(X, inList=True, fileId2Alphabet=True))
 

@@ -107,6 +107,9 @@ class Server():
                 codedSubfileList[codedSubfileIdx, startCol:startCol+self.numOfSubfile] += \
                     Z_select_sum[startCol:startCol+self.numOfSubfile] & ~Z_select[row, startCol:startCol+self.numOfSubfile] 
 
+            if self.fileId2Alphabet:
+                group = [member+1 for member in group]
+
             groupList.append(group)
             codedSubfileIdx += 1
         
