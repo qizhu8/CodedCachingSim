@@ -23,7 +23,6 @@ In folder *./CodedCaching*, `Network.py` is the file you would like to run first
 cd CodedCaching
 python3 Network.py
 ```
-I haven't tested my code throughly, but it should generally work.
 
 
 
